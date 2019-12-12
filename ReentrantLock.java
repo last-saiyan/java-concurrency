@@ -1,4 +1,4 @@
-public class Lock{
+public class ReentrantLock{
 
   boolean isLocked = false;
   Thread  lockedBy = null;
