@@ -1,34 +1,32 @@
 package lock;
 
-public class SimpleLock {
+public class ReEntrantLock {
 
     private boolean isLocked = false;
     private Thread lockedBy = null;
+    private int count = 0;
 
     synchronized public void  lock() throws InterruptedException {
-//        this is not a spin lock want ot demonstrate that
-//        if statement will not work
-//        check testSpuriousWakeup in TestSimpleLock class
-        if (isLocked) {
+        Thread currentThread = Thread.currentThread();
+        while (isLocked && lockedBy != currentThread){
             wait();
         }
         isLocked = true;
-        lockedBy = Thread.currentThread();
+        count++;
+        lockedBy = currentThread;
     }
 
     public synchronized void unlock(){
         if(Thread.currentThread() == lockedBy) {
+            count--;
+        }
+        if(count == 0) {
             isLocked = false;
             notifyAll();
         }
     }
 
-    public synchronized void notifyAllThread(){
-        notifyAll();
-    }
-
     public boolean isLocked(){
         return isLocked;
     }
-
 }

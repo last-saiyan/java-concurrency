@@ -1,15 +1,12 @@
 package lock;
 
-public class SimpleLock {
+public class SpinLock {
 
     private boolean isLocked = false;
     private Thread lockedBy = null;
 
     synchronized public void  lock() throws InterruptedException {
-//        this is not a spin lock want ot demonstrate that
-//        if statement will not work
-//        check testSpuriousWakeup in TestSimpleLock class
-        if (isLocked) {
+        while (isLocked){
             wait();
         }
         isLocked = true;
@@ -30,5 +27,4 @@ public class SimpleLock {
     public boolean isLocked(){
         return isLocked;
     }
-
 }
