@@ -1,25 +1,18 @@
 package barrier;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-public class CountDownLatch {
-    ReadWriteLock lock = new ReentrantReadWriteLock();
-    private Lock rLock = lock.readLock();
-    private Lock wLock = lock.writeLock();
+public class FakeCountDownLatch {
     private int count;
 
-
-    public CountDownLatch(int count){
+    public FakeCountDownLatch(int count){
         this.count = count;
     }
 
 
     public synchronized void countDown(){
-            System.out.println(count + " -count in " + Thread.currentThread().getName());
-            count--;
+        count--;
+        if (count == 0) {
             this.notifyAll();
+        }
     }
 
 
@@ -28,7 +21,7 @@ public class CountDownLatch {
     }
 
 
-    public void await() throws InterruptedException {
+    public synchronized void await() throws InterruptedException {
         while (count > 0) {
             wait();
         }
