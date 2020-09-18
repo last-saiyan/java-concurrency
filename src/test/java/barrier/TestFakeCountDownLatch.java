@@ -16,10 +16,12 @@ public class TestCountDownLatch {
         latchSingleThread.countDown();
         latchSingleThread.countDown();
         Assertions.assertEquals(threadCount-2, latchSingleThread.getCount());
+
+
         CountDownLatch latch = new CountDownLatch(threadCount);
         java.util.concurrent.CountDownLatch realLatch = new
                 java.util.concurrent.CountDownLatch(threadCount - diff);
-        ExecutorService service = Executors.newFixedThreadPool(10);
+        ExecutorService service = Executors.newFixedThreadPool(threadCount);
         for (int i = 0; i < threadCount; i++) {
             service.submit(() -> {
                 try {
@@ -29,9 +31,11 @@ public class TestCountDownLatch {
                 }
                 latch.countDown();
                 realLatch.countDown();
+                System.out.println(latch.getCount() + " - count " + threadCount);
             });
         }
         realLatch.await();
+        latch.await();
         Assertions.assertEquals(diff, latch.getCount());
     }
 
