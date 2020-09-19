@@ -36,7 +36,16 @@ public class FakeHashmap <K, V> {
         return node.val;
     }
 
-//    public void replace(K key, V oldVal, )
+
+    public boolean replaceIfExists(K key, V oldVal, V newVal){
+        int ind = getIndex(key);
+        if(buckets[ind] == null){
+            return false;
+        }
+        return buckets[ind].replaceIfExist(key, oldVal, newVal);
+    }
+
+
 
     public V delete(K key){
         int ind = getIndex(key);
@@ -48,6 +57,14 @@ public class FakeHashmap <K, V> {
             return null;
         }
         return node.val;
+    }
+
+    public boolean insertIfAbsent(K key, V val){
+        int ind = getIndex(key);
+        if(buckets[ind] == null){
+            return false;
+        }
+        return buckets[ind].insertIfAbsent(key, val);
     }
 
     private int getIndex(K key){
@@ -97,6 +114,52 @@ class Bucket<K, V>{
                 return;
             }
             oldNode.val = node.val;
+        }finally {
+            wLock.unlock();
+        }
+    }
+
+    boolean replaceIfExist(K key, V oldVal, V newVal){
+        rLock.lock();
+        try {
+            Node<K, V> node = start;
+            while (node != null) {
+                if (node.key.equals(key) && node.val.equals(oldVal)){
+                    node.val = newVal;
+                    return true;
+                }
+                node = node.next;
+            }
+            return false;
+        }finally {
+            rLock.unlock();
+        }
+    }
+
+
+    boolean insertIfAbsent(K key, V val){
+        wLock.lock();
+        try {
+            Node<K, V> node = start;
+            boolean found = false;
+            while (node != null) {
+                if (node.key.equals(key)) {
+                    found = true;
+                }
+                node = node.next;
+            }
+            if(!found){
+                Node<K, V> newNode = new Node<>(key, val);
+                if(start == null){
+                    start = newNode;
+                    end = newNode;
+                }else {
+                    end.next = newNode;
+                    newNode.prev = end;
+                    end = newNode;
+                }
+            }
+            return !found;
         }finally {
             wLock.unlock();
         }
