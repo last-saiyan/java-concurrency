@@ -1,9 +1,12 @@
 package dataStructures;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class Hashmap <K, V>{
+public class FakeHashmap <K, V> {
 
     private int bucketCount = 16;
     private Bucket<K, V>[] buckets = new Bucket[bucketCount];
@@ -18,7 +21,7 @@ public class Hashmap <K, V>{
         }else {
             bucket = buckets[ind];
         }
-        bucket.updNode(node);
+        bucket.updateNode(node);
     }
 
     public V get(K key){
@@ -52,6 +55,19 @@ public class Hashmap <K, V>{
         return hash%bucketCount;
     }
 
+    public Set<Node> entrySet(){
+        Bucket<K, V> bucket;
+        Set<Node> outputSet = new HashSet<>();
+        for (int i=0 ; i<bucketCount ; i++){
+            bucket = buckets[i];
+            if(bucket != null) {
+                Set<Node<K, V>> set = bucket.getAll();
+                outputSet.addAll(set);
+            }
+        }
+        return outputSet;
+    }
+
 }
 
 class Bucket<K, V>{
@@ -65,7 +81,7 @@ class Bucket<K, V>{
      * adds new node if key is not present
      * updated value of node if key is present
      * */
-    void updNode(Node<K, V> node){
+    void updateNode(Node<K, V> node){
         wLock.lock();
         try {
             if (start == null) {
@@ -107,10 +123,25 @@ class Bucket<K, V>{
     }
 
 
+    Set<Node<K, V>> getAll(){
+        Set<Node<K, V>> set = new HashSet<>();
+        rLock.lock();
+        try {
+            Node<K, V> node = start;
+            while (node != null){
+                set.add(node);
+                node = node.next;
+            }
+            return set;
+        }finally {
+            rLock.unlock();
+        }
+    }
+
+
     Node<K, V> delNode(K key){
         wLock.lock();
         try {
-
             Node<K, V> node = getNode(key);
             if (node != null) {
                 if (start == node) {
@@ -129,18 +160,5 @@ class Bucket<K, V>{
         }finally {
             wLock.unlock();
         }
-    }
-}
-
-class Node<K, V>{
-    Node<K, V> next;
-    Node<K, V> prev;
-    K key;
-    V val;
-    Node(K key, V val){
-        this.val = val;
-        this.key = key;
-        next = null;
-        prev = null;
     }
 }
